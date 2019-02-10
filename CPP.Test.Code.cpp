@@ -13,6 +13,7 @@
 #include "hash_table.h"
 #include "binarytree.h"
 #include "graph.h"
+
 std::size_t hashFunction(const std::string& val)
 {
 	static std::tr1::hash<std::string> fn;

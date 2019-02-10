@@ -4,6 +4,7 @@
 #include <memory>
 #include <iostream>
 #include <stack>
+#include <memory>
 
 template<typename T>
 class binary_tree
@@ -11,9 +12,11 @@ class binary_tree
 
 
 	template<typename T_NODE>
-		class tree_node
+	struct tree_node
 		{
-		public:
+				std::shared_ptr<tree_node<T_NODE> > left_;
+				std::shared_ptr<tree_node<T_NODE> > right_;
+
 
 				explicit tree_node(const T_NODE& value) :  value_(value)
 				{
@@ -100,8 +103,6 @@ class binary_tree
 						red,
 						black
 				};*/
-				std::shared_ptr<tree_node<T_NODE> > left_;
-				std::shared_ptr<tree_node<T_NODE> > right_;
 
 				T_NODE value_;
 				//colour colour_;

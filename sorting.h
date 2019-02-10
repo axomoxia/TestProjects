@@ -45,10 +45,13 @@ void quick_sort(std::vector<T>& input)
 {
 	if (input.size() > 1)
 	{
-		auto start_it = input.begin();
-		auto end_it = input.end();
-		--end_it;
-		quick_sort_internal<T>(start_it,end_it);
+//		typename std::vector<T>::iterator start = input.begin();
+//		typename std::vector<T>::iterator endit = input.end();
+
+//		typename std::vector<T>::iterator start2 = input.begin();
+//		typename std::vector<T>::iterator end_it = input.end();
+//		--endit;
+		quick_sort_internal<T>(std::begin(input),std::end(input));
 	}
 }
 
@@ -57,11 +60,11 @@ void quick_sort(std::vector<T>& input)
 template <class T>
 void insert_sort(std::vector<T>& input)
 {
-	typename std::vector<T>::iterator start = input.begin();
-	typename std::vector<T>::iterator it = input.begin();
-	it++;
-	typename std::vector<T>::iterator end = input.end();
-	typename std::vector<T>::iterator place;
+//	typename std::vector<T>::iterator start = input.begin();
+//	typename std::vector<T>::iterator it = input.begin();
+//	it++;
+//	typename std::vector<T>::iterator end = input.end();
+//	typename std::vector<T>::iterator place;
 
 
 	int insertingIndex = 0;

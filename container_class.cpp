@@ -1,8 +1,9 @@
 #include <iostream>
-#include <boost/thread.hpp>
-#include <boost/lexical_cast.hpp>
 #include <pthread.h>
 #include <deque>
+#include <mutex>
+#include <thread>
+#include <unistd.h>
 
 template <class T>
 class MyContainer
@@ -10,19 +11,19 @@ class MyContainer
 private:
 	struct Element
 	{
-		Element(const T& data):data_(data),prev_(NULL),next_(NULL)
+		Element(const T&& data):data_(data),prev_(nullptr),next_(nullptr)
 		{
 
 
 		}
 		T data_;				// create copy of the data
-		Element * prev_;
-		Element * next_;
+		Element * prev_ = nullptr;
+		Element * next_ = nullptr;
 	};
 
 public:
 
-	MyContainer() : headPtr_(NULL), tailPtr_(NULL), element_count_(0)
+	MyContainer() : headPtr_(nullptr), tailPtr_(nullptr), element_count_(0)
 	{
 
 	}
@@ -96,7 +97,7 @@ public:
 		{
 			retVal = tailPtr_->data_;
 			Element * pLastElement = tailPtr_;
-			tailPtr_ = pLastElement.next_;
+			tailPtr_ = pLastElement->next_;
 			delete pLastElement;
 			element_count_--;
 			if (element_count_==0)
@@ -112,9 +113,9 @@ private:
 
 
 
-	Element * headPtr_;
-	Element * tailPtr_;
-	int element_count_;
+	Element * headPtr_ = nullptr;
+	Element * tailPtr_ = nullptr;
+	int element_count_ = 0;
 
 
 };
@@ -129,23 +130,22 @@ public:
 	}
 	T Pop()
 	{
-		return container_.RemoveHead();
+		return MyContainer<T>::RemoveHead();
 	}
 
 	void Add(const T& data)
 	{
-		container_.AddTail(data);
+		MyContainer<T>::AddTail(data);
 	}
 
-private:
 
-	MyContainer<T> container_;
 
 };
 
 template <class T>
 class MyStack : public MyContainer<T>
 {
+
 public:
 
 	MyStack()
@@ -155,53 +155,24 @@ public:
 
 	void Push(const T& data)
 	{
-		container_.AddHead(T)
+		MyContainer<T>::AddHead(data);
 	}
 	T Pop()
 	{
-		return container_.RemoveHead(T);
+		return MyContainer<T>::RemoveHead();
 	}
+
+
 };
 
-class MyLocker()
-{
-public:
 
-	MyLocker()
-	{
-
-	}
-
-}
 template <class T>
 class ThreadSafeQueue
 {
-public:
-
-	ThreadSafeQueue() : headPtr_(NULL), tailPtr_(NULL), element_count_(0)
-	{
-
-	}
-
-	T * PopIfNotEmpty()
-	{
-		T * retVal = NULL;
-		boost::lock_guard<boost::mutex> guard(mutex_);
-		if (headPtr_)
-		{
-			Element * pElement = headPtr_;
-			retVal = headPtr_->data_;
-			headPtr_ = headPtr_->next_;
-			element_count_--;
-			if(element_count_==0)
-			{
-				tailPtr_ = NULL;
-			}
-		}
-		return retVal;
-	}
-
 private:
+
+	int element_count_ = 0;
+	std::mutex mutex_;
 
 	struct Element
 		{
@@ -215,10 +186,39 @@ private:
 			Element * next_;
 		};
 
+	Element * headPtr_ = nullptr;
+	Element * tailPtr_ = nullptr;
+
+public:
+
+	ThreadSafeQueue() :element_count_(0), headPtr_(NULL), tailPtr_(NULL)
+	{
+
+	}
+
+	T * PopIfNotEmpty()
+	{
+		T * retVal = NULL;
+		std::lock_guard<std::mutex> guard(mutex_);
+		if (headPtr_)
+		{
+			retVal = headPtr_->data_;
+			headPtr_ = headPtr_->next_;
+			element_count_--;
+			if(element_count_==0)
+			{
+				tailPtr_ = NULL;
+			}
+		}
+		return retVal;
+	}
+
+
+
 public:
 	void Add(T*data)
 	{
-		boost::lock_guard<boost::mutex> guard(mutex_);
+		std::lock_guard<std::mutex> lck (mutex_);
 		Element * pNewElement = new Element;
 		pNewElement->data_ = data;
 		// first element
@@ -236,12 +236,7 @@ public:
 		element_count_++;
 	}
 
-private:
 
-	Element * headPtr_;
-	Element * tailPtr_;
-	int element_count_;
-	boost::mutex mutex_;
 };
 
 struct Thread_data
@@ -260,7 +255,7 @@ void * threadFunc1(void*thread_data)
 	while(1)
 	{
 		int nRandom = rand()%15;
-		std::string val = boost::lexical_cast<std::string>(nRandom);
+		std::string val = std::to_string(nRandom);
 		pthread_mutex_lock(&pThreadData->mutex_);
 		try
 		{
@@ -280,7 +275,7 @@ void * threadFunc1(void*thread_data)
 
 	std::cout << "Hello thread -gone!" << std::endl;
 
-
+	return nullptr;
 }
 
 
@@ -339,7 +334,7 @@ int main(int argc, char* argv[])
 	pthread_cond_init(&thread_data.signal_condition_, NULL);
 
 	pthread_t t[2];
-	void * 	  tRes[2];
+
 	pthread_create(&t[0],NULL,threadFunc1,(void*)&thread_data);
 	pthread_create(&t[1],NULL,threadFunc2,(void*)&thread_data);
 
